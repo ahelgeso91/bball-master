@@ -1,0 +1,156 @@
+Sport: American Football
+League: NCAAF
+Key: americanfootball_ncaaf
+
+Sport: American Football
+League: NFL
+Key: americanfootball_nfl
+
+Sport: Aussie Rules
+League: AFL
+Key: aussierules_afl
+
+Sport: Baseball
+League: MLB
+Key: baseball_mlb
+
+Sport: Basketball
+League: Basketball Euroleague
+Key: basketball_euroleague
+
+Sport: Basketball
+League: NBA
+Key: basketball_nba
+
+Sport: Cricket
+League: Test Matches
+Key: cricket_test_match
+
+Sport: Mixed Martial Arts
+League: MMA
+Key: mma_mixed_martial_arts
+
+Sport: Rugby League
+League: NRL
+Key: rugbyleague_nrl
+
+Sport: Soccer - Other
+League: Primera División - Argentina
+Key: soccer_argentina_primera_division
+
+Sport: Soccer - Other
+League: A-League
+Key: soccer_australia_aleague
+
+Sport: Soccer - Europe
+League: Belgium First Div
+Key: soccer_belgium_first_div
+
+Sport: Soccer - Other
+League: Brazil Série A
+Key: soccer_brazil_campeonato
+
+Sport: Soccer - Europe
+League: Denmark Superliga
+Key: soccer_denmark_superliga
+
+Sport: Soccer - UK
+League: Championship
+Key: soccer_efl_champ
+
+Sport: Soccer - UK
+League: League 1
+Key: soccer_england_league1
+
+Sport: Soccer - UK
+League: League 2
+Key: soccer_england_league2
+
+Sport: Soccer - UK
+League: EPL
+Key: soccer_epl
+
+Sport: Soccer - Europe
+League: Veikkausliiga - Finland
+Key: soccer_finland_veikkausliiga
+
+Sport: Soccer - Europe
+League: Ligue 1 - France
+Key: soccer_france_ligue_one
+
+Sport: Soccer - Europe
+League: Ligue 2 - France
+Key: soccer_france_ligue_two
+
+Sport: Soccer - Europe
+League: Bundesliga - Germany
+Key: soccer_germany_bundesliga
+
+Sport: Soccer - Europe
+League: Bundesliga 2 - Germany
+Key: soccer_germany_bundesliga2
+
+Sport: Soccer - Europe
+League: Serie A - Italy
+Key: soccer_italy_serie_a
+
+Sport: Soccer - Europe
+League: Serie B - Italy
+Key: soccer_italy_serie_b
+
+Sport: Soccer - Other
+League: J League
+Key: soccer_japan_j_league
+
+Sport: Soccer - Other
+League: K League 1
+Key: soccer_korea_kleague1
+
+Sport: Soccer - Europe
+League: League of Ireland
+Key: soccer_league_of_ireland
+
+Sport: Soccer - Other
+League: Liga MX
+Key: soccer_mexico_ligamx
+
+Sport: Soccer - Europe
+League: Dutch Eredivisie
+Key: soccer_netherlands_eredivisie
+
+Sport: Soccer - Europe
+League: Eliteserien - Norway
+Key: soccer_norway_eliteserien
+
+Sport: Soccer - Europe
+League: Primeira Liga - Portugal
+Key: soccer_portugal_primeira_liga
+
+Sport: Soccer - Europe
+League: Premier League - Russia
+Key: soccer_russia_premier_league
+
+Sport: Soccer - Europe
+League: La Liga - Spain
+Key: soccer_spain_la_liga
+
+Sport: Soccer - Europe
+League: La Liga 2 - Spain
+Key: soccer_spain_segunda_division
+
+Sport: Soccer - Europe
+League: Allsvenskan - Sweden
+Key: soccer_sweden_allsvenskan
+
+Sport: Soccer - Europe
+League: Superettan - Sweden
+Key: soccer_sweden_superettan
+
+Sport: Soccer - Europe
+League: Turkey Super League
+Key: soccer_turkey_super_league
+
+Sport: Soccer - Other
+League: MLS
+Key: soccer_usa_mls
+

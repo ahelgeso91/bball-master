@@ -1,0 +1,17 @@
+Helpful Links
+
+four factors model basics
+https://docs.google.com/document/d/1mN4zhW5-i2GAzL56dSfrTR8bSRFEDIXfZZdyJpeQ0lc/mobilebasic
+
+scipy optimize curve
+https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.curve_fit.html
+
+finding and booting outliers
+https://stackoverflow.com/questions/23199796/detect-and-exclude-outliers-in-pandas-data-frame
+
+wild sports sql tool
+https://killersports.com
+
+numpy polyfit
+https://stackoverflow.com/questions/18767523/fitting-data-with-numpy
+
