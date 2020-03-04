@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-
 """
 
 def get_results(year, teams=[]):
@@ -68,36 +67,41 @@ def get_results(year, teams=[]):
         teams = team_abbrevs.values()
     
     df = pd.DataFrame()
+    league_links = []
     
     for team in teams:
-        running_df = pd.DataFrame()
         
         try:
-            print(f'\nGathering URLs for {team}')
+            print(f'Gathering URLs for {team}')
             game_links = get_urls(year, team)
+            league_links.extend(game_links)
         except:
             print(f'Error with game links for {team}')
+    
+    league_links = list(set(league_links))
+    
+    try:
+        print('Getting game dates')
+        game_dates = get_dates(league_links)
+    except:
+        print(f'Error with game dates function')
         
-        try:
-            print('Getting game dates')
-            game_dates = get_dates(game_links)
-        except:
-            print(f'Error with game dates for {team}')
-            
-        if year == (datetime.today()+relativedelta(months=+2)).year:
-            new_links = current_season_switch(game_dates,game_links)
-            game_links = new_links
-        print(f'Games Played: {len(game_links)}')
+    if year == (datetime.today()+relativedelta(months=+2)).year:
+        new_links = current_season_switch(game_dates,league_links)
+        league_links = new_links
         
-        try:
-            print(f'Gathering line scores for {team}...')
-            game_box_scores = get_line_scores(game_links)
-        except:
-            print(f'Error gathering line scores for {team}')
+    
+    print(f'Total Games To Scrape: {len(league_links)}')
+    
+    try:
+        print(f'Gathering line scores...')
+        game_box_scores = get_line_scores(league_links)
+    except:
+        print(f'Error gathering line scores')
 
-        running_df = pd.concat([game_dates, game_box_scores], axis = 1, ignore_index = True)
-        df = df.append(running_df)
-        
+    df = pd.concat([game_dates.reset_index(drop=True), game_box_scores],
+                    axis = 1, ignore_index = True)
+
     columns = ['date','away_team','away_q1','away_q2','away_q3','away_q4','away_OT','away_final',
               'home_team','home_q1','home_q2','home_q3','home_q4','home_OT','home_final']
     
@@ -176,8 +180,12 @@ def get_dates(links, last_date_scraped = None):
 
 def current_season_switch(dates, links):
     ''' For the first time scraping the current season'''
-    links = links[0:len(dates)]
-    return links
+    
+#    dates['date'] = dates['date'].dt.strftime('%Y%m%d'+str(0))
+    new_links = [links[i] for i in list(dates.index)]
+    
+    return new_links
+    
 
 # def calc_rest_days(dates_db):
     
@@ -202,6 +210,7 @@ def get_line_scores(urls):
     import sys
     import requests, bs4
     import re
+    import time
     
     # List of urls
     # This will be called immediately after the team URLs were scraped
@@ -241,7 +250,7 @@ def get_line_scores(urls):
                home, home_q1, home_q2, home_q3, home_q4, home_OT, home_final]
 
     for i, url in enumerate(urls):
-        sys.stdout.write(f'\rGame Number: {i+1}')
+        sys.stdout.write(f"\rGame Number {i+1}")
         sys.stdout.flush()
         current_game = f'https://www.basketball-reference.com{url}'
         res = requests.get(current_game)
@@ -354,10 +363,11 @@ def in_season_update(year = None):
         year = str((datetime.today()+timedelta(months=2)).year)
                    
     df = pd.read_csv(f'{year}_line_scores.csv')
+    df['date'] = pd.to_datetime(df['date'])
     df.sort_values(by='date', inplace=True)
     df.reset_index(drop=True, inplace=True)
     
-    last_date_scraped = datetime.strptime(df['date'].iloc[-1],'%Y-%m-%d')
+    last_date_scraped = df['date'].iloc[-1]
 
     for team in TEAMS:
         urls = get_urls(year, team)
@@ -378,26 +388,9 @@ def in_season_update(year = None):
             
         line_scores = get_line_scores(urls_to_scrape)
         line_scores = pd.concat([dates_to_scrape, line_scores], axis=1)
-        df = pd.concat([df, line_scores])
-        
+        df = pd.concat([df, line_scores]).reset_index(drop=True)
+        df.sort_values(by='date', inplace=True)
+        df.drop_duplicates(inplace=True)
+#        df.to_csv(f'{year}_line_scores.csv', index=False)
     return df
         
-        
-    
-    
-        
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
