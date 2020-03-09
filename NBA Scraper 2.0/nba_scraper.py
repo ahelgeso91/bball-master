@@ -60,7 +60,6 @@ def get_results(year, teams=[]):
     # year will be an int
     
     # If no team is input, scrape for all teams
-    # Need to have a switch for if scraping current season or not
     # First: Generate list of Game Log URLs
     
     if teams == []:
@@ -78,13 +77,19 @@ def get_results(year, teams=[]):
         except:
             print(f'Error with game links for {team}')
     
+    # This line deletes duplicates from the list (PHI plays BOS 
+    # and BOS plays PHI would be scraped twice)
     league_links = list(set(league_links))
     
+    # Extract dates from the common link structure
     try:
         print('Getting game dates')
         game_dates = get_dates(league_links)
     except:
         print(f'Error with game dates function')
+    
+    # If this is the first time building the current season,
+    # only scrape up until today's date
         
     if year == (datetime.today()+relativedelta(months=+2)).year:
         new_links = current_season_switch(game_dates,league_links)
@@ -92,13 +97,16 @@ def get_results(year, teams=[]):
         
     
     print(f'Total Games To Scrape: {len(league_links)}')
-    
+    # Now we go get the line scores with the link list
     try:
         print(f'Gathering line scores...')
         game_box_scores = get_line_scores(league_links)
     except:
         print(f'Error gathering line scores')
-
+    
+    # We concat the dates and the line scores data, then label
+    # the columns and return the data
+        
     df = pd.concat([game_dates.reset_index(drop=True), game_box_scores],
                     axis = 1, ignore_index = True)
 
@@ -119,13 +127,13 @@ def get_urls(year, team):
     # Team is a string, year is an int
     # Need a switch for current season
     
-    # First page to start looking for games
+    # Find all the games the team played:
 
     team_page = f'https://www.basketball-reference.com/teams/{team}/{year}_games.html'
     res = requests.get(team_page)
     res.raise_for_status()
     soup = bs4.BeautifulSoup(res.text, 'html.parser')
-
+    
     # Get just regular season games
     reg_season = soup.find('table',{'id':'games'})
     
@@ -357,18 +365,33 @@ def in_season_update(year = None):
     
     import pandas as pd
     from datetime import datetime
-    from datetime import timedelta
+    from dateutil.relativedelta import relativedelta
+    import tkinter as tk
+    from tkinter import filedialog
     
     if not year:
-        year = str((datetime.today()+timedelta(months=2)).year)
-                   
-    df = pd.read_csv(f'{year}_line_scores.csv')
+        year = str((datetime.today()+relativedelta(months=+2)).year)
+    
+    #Dialog window to select correct file
+    root=tk.Tk()
+    root.withdraw()
+    file_path = filedialog.askopenfilename()
+    
+    # Read in and organize file by dates
+    df = pd.read_csv(file_path, index_col=0)
     df['date'] = pd.to_datetime(df['date'])
     df.sort_values(by='date', inplace=True)
     df.reset_index(drop=True, inplace=True)
     
+    # The last entry in the dates column is last time we updated
+    # the data
     last_date_scraped = df['date'].iloc[-1]
 
+    # For each team, get the URLS, get the dates to scrape 
+    # (between last time scraped and the current day)
+    # and then extract only the correct URLs from the list using
+    # the known needed dates
+    
     for team in TEAMS:
         urls = get_urls(year, team)
         dates_to_scrape = get_dates(urls, last_date_scraped)
@@ -386,6 +409,10 @@ def in_season_update(year = None):
                     else:
                         pass
             
+        # We have the URLs now, so we can get the line scores
+        # like normal. Then we make sure we drop duplicates, 
+        # and return the dataframe. The user should manually save.
+                    
         line_scores = get_line_scores(urls_to_scrape)
         line_scores = pd.concat([dates_to_scrape, line_scores], axis=1)
         df = pd.concat([df, line_scores]).reset_index(drop=True)
