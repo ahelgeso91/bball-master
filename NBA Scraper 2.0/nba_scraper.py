@@ -95,7 +95,7 @@ def get_results(year, teams=[]):
         new_links = current_season_switch(game_dates,league_links)
         league_links = new_links
         
-    
+
     print(f'Total Games To Scrape: {len(league_links)}')
     # Now we go get the line scores with the link list
     try:
@@ -218,7 +218,6 @@ def get_line_scores(urls):
     import sys
     import requests, bs4
     import re
-    import time
     
     # List of urls
     # This will be called immediately after the team URLs were scraped
@@ -246,6 +245,7 @@ def get_line_scores(urls):
     away_q4 = []
     away_OT = []
     away_final = []
+
     home = []
     home_q1 = []
     home_q2 = []
@@ -253,9 +253,7 @@ def get_line_scores(urls):
     home_q4 = []
     home_OT = []
     home_final = []
-    
-    all_lists = [away, away_q1, away_q2, away_q3, away_q4, away_OT, away_final,
-               home, home_q1, home_q2, home_q3, home_q4, home_OT, home_final]
+
 
     for i, url in enumerate(urls):
         sys.stdout.write(f"\rGame Number {i+1}")
@@ -277,6 +275,7 @@ def get_line_scores(urls):
             away_q4.append(df['Scoring']['4'].iloc[0])
             away_OT.append(df['Scoring']['OT'].iloc[0])
             away_final.append(df['Scoring']['T'].iloc[0])
+
             home_q1.append(df['Scoring']['1'].iloc[1])
             home_q2.append(df['Scoring']['2'].iloc[1])
             home_q3.append(df['Scoring']['3'].iloc[1])
@@ -293,14 +292,13 @@ def get_line_scores(urls):
             away_q4.append(df['Scoring']['4'].iloc[0])
             away_OT.append(0)
             away_final.append(df['Scoring']['T'].iloc[0])
+
             home_q1.append(df['Scoring']['1'].iloc[1])
             home_q2.append(df['Scoring']['2'].iloc[1])
             home_q3.append(df['Scoring']['3'].iloc[1])
             home_q4.append(df['Scoring']['4'].iloc[1])
             home_OT.append(0)
             home_final.append(df['Scoring']['T'].iloc[1])
-
-
 
     line_score_dict = {
         'away_team':away,
@@ -316,7 +314,7 @@ def get_line_scores(urls):
         'home_q3':home_q3,
         'home_q4':home_q4,
         'home_OT':home_OT,
-        'home_final':home_final
+        'home_final':home_final,
     }
     
     
@@ -378,7 +376,7 @@ def in_season_update(year = None):
     file_path = filedialog.askopenfilename()
     
     # Read in and organize file by dates
-    df = pd.read_csv(file_path, index_col=0)
+    df = pd.read_csv(file_path)
     df['date'] = pd.to_datetime(df['date'])
     df.sort_values(by='date', inplace=True)
     df.reset_index(drop=True, inplace=True)
@@ -418,6 +416,76 @@ def in_season_update(year = None):
         df = pd.concat([df, line_scores]).reset_index(drop=True)
         df.sort_values(by='date', inplace=True)
         df.drop_duplicates(inplace=True)
+        df.dropna(inplace = True)
 #        df.to_csv(f'{year}_line_scores.csv', index=False)
     return df
+
+def get_four_fac(urls):
+    
+    import pandas as pd
+    import sys
+    import requests, bs4
+    import re
+    
+    home_pace = []
+    home_efg = []
+    home_tov = []
+    home_orb = []
+    home_ftr = []
+    home_ortg = []
+    home_drtg = []
+    
+    away_pace = []
+    away_efg = []
+    away_tov = []
+    away_orb = []
+    away_ftr = []
+    away_ortg = []
+    away_drtg = []
+    
+    for i, url in enumerate(urls):
+        sys.stdout.write(f"\rGame Number {i+1}")
+        sys.stdout.flush()
+        current_game = f'https://www.basketball-reference.com{url}'
+        res = requests.get(current_game)
+        res.raise_for_status()
+        soup = bs4.BeautifulSoup(re.sub("<!--|-->", "", res.text), 'lxml')
+        four_fac = soup.find('table', {'id':'four_factors'})
+        four_fac_df = pd.read_html(str(four_fac),flavor='bs4')[0]
+        
+        home_pace.append(four_fac_df['Unnamed: 1_level_0']['Pace'].iloc[1])
+        home_efg.append(four_fac_df['Four Factors']['eFG%'].iloc[1])
+        home_tov.append(four_fac_df['Four Factors']['TOV%'].iloc[1])
+        home_orb.append(four_fac_df['Four Factors']['ORB%'].iloc[1])
+        home_ftr.append(four_fac_df['Four Factors']['FT/FGA'].iloc[1])
+        home_ortg.append(four_fac_df['Unnamed: 6_level_0']['ORtg'].iloc[1])
+        home_drtg.append(four_fac_df['Unnamed: 6_level_0']['ORtg'].iloc[0])
+    
+        away_pace.append(four_fac_df['Unnamed: 1_level_0']['Pace'].iloc[0])
+        away_efg.append(four_fac_df['Four Factors']['eFG%'].iloc[0])
+        away_tov.append(four_fac_df['Four Factors']['TOV%'].iloc[0])
+        away_orb.append(four_fac_df['Four Factors']['ORB%'].iloc[0])
+        away_ftr.append(four_fac_df['Four Factors']['FT/FGA'].iloc[0])
+        away_ortg.append(four_fac_df['Unnamed: 6_level_0']['ORtg'].iloc[0])
+        away_drtg.append(four_fac_df['Unnamed: 6_level_0']['ORtg'].iloc[1])
+    
+    four_facs = {
+        'away_pace': away_pace,
+        'away_efg': away_efg,
+        'away_tov': away_tov,
+        'away_orb': away_orb,
+        'away_ftr': away_ftr,
+        'away_ortg': away_ortg,
+        'away_drtg': away_drtg,
+    
+        'home_pace': home_pace,
+        'home_efg': home_efg,
+        'home_tov': home_tov,
+        'home_orb': home_orb,
+        'home_ftr': home_ftr,
+        'home_ortg': home_ortg,
+        'home_drtg': home_drtg
+        }
+    
+    return pd.DataFrame(four_facs)
         

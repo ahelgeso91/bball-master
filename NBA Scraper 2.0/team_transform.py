@@ -60,7 +60,7 @@ def team_transform(df):
     'Orlando Magic':'ORL'
     }
     
-    TEAMS = TEAM_ABBREVS.values()
+    TEAMS = list(TEAM_ABBREVS.values())
     
     for team in TEAMS:
         
@@ -90,6 +90,9 @@ def team_transform(df):
         rundf.loc[idx_team_away, 'team_q2'] = rundf.loc[idx_team_away, 'away_q2']
         
         rundf.loc[idx_team_home, 'team_q3'] = rundf.loc[idx_team_home, 'home_q3']
+        rundf.loc[idx_team_away, 'team_q3'] = rundf.loc[idx_team_away, 'away_q3']
+
+        rundf.loc[idx_team_home, 'team_q4'] = rundf.loc[idx_team_home, 'home_q4']
         rundf.loc[idx_team_away, 'team_q4'] = rundf.loc[idx_team_away, 'away_q4']
         
         rundf.loc[idx_team_home, 'team_OT'] = rundf.loc[idx_team_home, 'home_OT']
@@ -118,7 +121,9 @@ def team_transform(df):
         rundf.loc[idx_team_home, 'opponent_final'] = rundf.loc[idx_team_home, 'away_final']
         rundf.loc[idx_team_away, 'opponent_final'] = rundf.loc[idx_team_away, 'home_final']
 
-        cols_to_drop = ['away_q1',
+        cols_to_drop = ['away_team',
+                        'home_team',
+                        'away_q1',
                          'away_q2',
                          'away_q3',
                          'away_q4',
@@ -132,9 +137,10 @@ def team_transform(df):
                          'home_final']
         
         rundf.drop(cols_to_drop, axis=1, inplace=True)
-        all_teams.append(rundf)
+        all_teams = all_teams.append(rundf)
         
-    return all_teams
+    return all_teams.reset_index(drop=True)
+
 
 
 
