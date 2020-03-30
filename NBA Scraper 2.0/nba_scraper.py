@@ -22,6 +22,10 @@ def get_results(year, teams=[]):
     from datetime import datetime
     from dateutil.relativedelta import relativedelta
     import pandas as pd
+    import time
+    
+    start_time = time.time()
+    print(f'Current time: {start_time}')
 
     team_abbrevs = {
     'Cleveland Cavaliers': 'CLE',
@@ -103,6 +107,12 @@ def get_results(year, teams=[]):
         game_box_scores = get_line_scores(league_links)
     except:
         print(f'Error gathering line scores')
+        
+    # try:
+    #     print(f'Gathering four factors numbers...')
+    #     four_facs = get_four_fac(league_links)
+    # except:
+    #     print(f'Error gathering four factors')
     
     # We concat the dates and the line scores data, then label
     # the columns and return the data
@@ -111,9 +121,13 @@ def get_results(year, teams=[]):
                     axis = 1, ignore_index = True)
 
     columns = ['date','away_team','away_q1','away_q2','away_q3','away_q4','away_OT','away_final',
-              'home_team','home_q1','home_q2','home_q3','home_q4','home_OT','home_final']
+              'home_team','home_q1','home_q2','home_q3','home_q4','home_OT','home_final',
+              'away_pace','away_efg','away_tov','away_orb','away_ftr','away_ortg','away_drtg',
+              'home_pace','home_efg','home_tov','home_orb','home_ftr','home_ortg','home_drtg']
     
+
     df.columns = columns
+    print(f'---{(time.time() - start_time)/60} minutes---')
     return df
 
 
@@ -212,12 +226,14 @@ def current_season_switch(dates, links):
 
 def get_line_scores(urls):
     ''' Returns pandas dataframe of home team, away team, and quarterly
-    scoring splits.'''
+    scoring splits, as well as pace, four factors, and O/DRtg'''
     
     import pandas as pd
     import sys
     import requests, bs4
+    from bs4 import SoupStrainer
     import re
+    import time
     
     # List of urls
     # This will be called immediately after the team URLs were scraped
@@ -238,6 +254,7 @@ def get_line_scores(urls):
         # Home OT (IF OT)
         # Home Final
     
+    
     away = []
     away_q1 = []
     away_q2 = []
@@ -253,19 +270,60 @@ def get_line_scores(urls):
     home_q4 = []
     home_OT = []
     home_final = []
+    
+    home_pace = []
+    home_efg = []
+    home_tov = []
+    home_orb = []
+    home_ftr = []
+    home_ortg = []
+    home_drtg = []
+    
+    away_pace = []
+    away_efg = []
+    away_tov = []
+    away_orb = []
+    away_ftr = []
+    away_ortg = []
+    away_drtg = []
 
 
     for i, url in enumerate(urls):
+        # Get the game log website
         sys.stdout.write(f"\rGame Number {i+1}")
         sys.stdout.flush()
         current_game = f'https://www.basketball-reference.com{url}'
         res = requests.get(current_game)
         res.raise_for_status()
-        soup = bs4.BeautifulSoup(re.sub("<!--|-->", "", res.text), 'lxml')
+        
+        # Create the 'line score' dataframe
+        only_line_scores = SoupStrainer(id = 'line_score')
+        soup = bs4.BeautifulSoup(re.sub("<!--|-->", "", res.text), 'lxml', parse_only = only_line_scores)
+        df = pd.read_html(str(soup),flavor='bs4')[0]
+        
+        # Create the 'four factors' dataframe
+        only_four_fac = SoupStrainer(id='four_factors')
+        soup = bs4.BeautifulSoup(re.sub("<!--|-->", "", res.text), 'lxml', parse_only = only_four_fac)        
+        four_fac_df = pd.read_html(str(soup),flavor='bs4')[0]
 
-        line_score = soup.find('table',{'id':'line_score'})
-        df = pd.read_html(str(line_score),flavor='bs4')[0]
+        # get the four factors on home and away
+        home_pace.append(four_fac_df['Unnamed: 1_level_0']['Pace'].iloc[1])
+        home_efg.append(four_fac_df['Four Factors']['eFG%'].iloc[1])
+        home_tov.append(four_fac_df['Four Factors']['TOV%'].iloc[1])
+        home_orb.append(four_fac_df['Four Factors']['ORB%'].iloc[1])
+        home_ftr.append(four_fac_df['Four Factors']['FT/FGA'].iloc[1])
+        home_ortg.append(four_fac_df['Unnamed: 6_level_0']['ORtg'].iloc[1])
+        home_drtg.append(four_fac_df['Unnamed: 6_level_0']['ORtg'].iloc[0])
+    
+        away_pace.append(four_fac_df['Unnamed: 1_level_0']['Pace'].iloc[0])
+        away_efg.append(four_fac_df['Four Factors']['eFG%'].iloc[0])
+        away_tov.append(four_fac_df['Four Factors']['TOV%'].iloc[0])
+        away_orb.append(four_fac_df['Four Factors']['ORB%'].iloc[0])
+        away_ftr.append(four_fac_df['Four Factors']['FT/FGA'].iloc[0])
+        away_ortg.append(four_fac_df['Unnamed: 6_level_0']['ORtg'].iloc[0])
+        away_drtg.append(four_fac_df['Unnamed: 6_level_0']['ORtg'].iloc[1])
 
+        # Get the scores per quarter on home and away filtered by OT yes/no
         if 'OT' in df['Scoring'].columns:
             away.append(df['Unnamed: 0_level_0']['Unnamed: 0_level_1'].iloc[0])
             home.append(df['Unnamed: 0_level_0']['Unnamed: 0_level_1'].iloc[1])
@@ -317,10 +375,29 @@ def get_line_scores(urls):
         'home_final':home_final,
     }
     
+    four_facs = {
+        'away_pace': away_pace,
+        'away_efg': away_efg,
+        'away_tov': away_tov,
+        'away_orb': away_orb,
+        'away_ftr': away_ftr,
+        'away_ortg': away_ortg,
+        'away_drtg': away_drtg,
     
-    return pd.DataFrame(line_score_dict)
+        'home_pace': home_pace,
+        'home_efg': home_efg,
+        'home_tov': home_tov,
+        'home_orb': home_orb,
+        'home_ftr': home_ftr,
+        'home_ortg': home_ortg,
+        'home_drtg': home_drtg
+        }
+    
+    
+    return pd.concat([pd.DataFrame(line_score_dict), pd.DataFrame(four_facs)], 
+                     axis = 1, ignore_index = True)
 
-def in_season_update(year = None):
+def in_season_update():
     
     ''' Takes in and updates a csv file in the working directory of format:
         {year}_line_scores.csv
@@ -366,9 +443,6 @@ def in_season_update(year = None):
     from dateutil.relativedelta import relativedelta
     import tkinter as tk
     from tkinter import filedialog
-    
-    if not year:
-        year = str((datetime.today()+relativedelta(months=+2)).year)
     
     #Dialog window to select correct file
     root=tk.Tk()
@@ -425,6 +499,7 @@ def get_four_fac(urls):
     import pandas as pd
     import sys
     import requests, bs4
+    from bs4 import SoupStrainer
     import re
     
     home_pace = []
@@ -449,9 +524,9 @@ def get_four_fac(urls):
         current_game = f'https://www.basketball-reference.com{url}'
         res = requests.get(current_game)
         res.raise_for_status()
-        soup = bs4.BeautifulSoup(re.sub("<!--|-->", "", res.text), 'lxml')
-        four_fac = soup.find('table', {'id':'four_factors'})
-        four_fac_df = pd.read_html(str(four_fac),flavor='bs4')[0]
+        only_four_fac = SoupStrainer(id='four_factors')
+        soup = bs4.BeautifulSoup(re.sub("<!--|-->", "", res.text), 'lxml', parse_only = only_four_fac)        
+        four_fac_df = pd.read_html(str(soup),flavor='bs4')[0]
         
         home_pace.append(four_fac_df['Unnamed: 1_level_0']['Pace'].iloc[1])
         home_efg.append(four_fac_df['Four Factors']['eFG%'].iloc[1])
